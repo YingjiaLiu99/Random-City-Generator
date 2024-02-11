@@ -26,7 +26,9 @@ public:
     glm::mat4 getViewMatrix(glm::vec4 pos,glm::vec4 look,glm::vec4 up);
     glm::mat4 createTranslationMatrix(float x, float y, float z);
     glm::mat4 createRotationMatrix(float angle, glm::vec3 axis);
+    bool glInitialized = false;
     void makeFBO();
+    void updateVBOs();
     void paintTexture(GLuint texture);
 public slots:
     void tick(QTimerEvent* event);                      // Called once per tick of m_timer

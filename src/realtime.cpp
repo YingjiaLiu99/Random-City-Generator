@@ -70,16 +70,51 @@ void Realtime::initializeGL() {
     // Students: anything requiring OpenGL calls when the program starts should be done here
     m_shader = ShaderLoader::createShaderProgram(":/resources/shaders/default.vert", ":/resources/shaders/default.frag");
     m_texture_shader = ShaderLoader::createShaderProgram(":/resources/shaders/texture.vert",":/resources/shaders/texture.frag");
-    //initialize cube, sphere, cylinder, cone's data's array
+
     updateParam(settings.shapeParameter1, settings.shapeParameter2);
+
+    // initialize cube, sphere, cylinder, cone's VAO and VBO
+    // ------------------------------ sphere -------------------------------- //
     glGenBuffers(1, &m_vbo_sphere);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_sphere);
+    glBufferData(GL_ARRAY_BUFFER,m_sphereData.size()*sizeof(GLfloat),m_sphereData.data(),GL_STATIC_DRAW);
     glGenVertexArrays(1, &m_vao_sphere);
+    glBindVertexArray(m_vao_sphere);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
+    // ------------------------------ cube --------------------------------- //
     glGenBuffers(1, &m_vbo_cube);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube);
+    glBufferData(GL_ARRAY_BUFFER,m_cubeData.size()*sizeof(GLfloat),m_cubeData.data(),GL_STATIC_DRAW);
     glGenVertexArrays(1, &m_vao_cube);
+    glBindVertexArray(m_vao_cube);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
+    // ------------------------------ cone --------------------------------- //
     glGenBuffers(1, &m_vbo_cone);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cone);
+    glBufferData(GL_ARRAY_BUFFER,m_coneData.size()*sizeof(GLfloat),m_coneData.data(),GL_STATIC_DRAW);
     glGenVertexArrays(1, &m_vao_cone);
+    glBindVertexArray(m_vao_cone);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
+    // ----------------------------- cylinder ------------------------------ //
     glGenBuffers(1, &m_vbo_cylinder);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cylinder);
+    glBufferData(GL_ARRAY_BUFFER,m_cylinderData.size()*sizeof(GLfloat),m_cylinderData.data(),GL_STATIC_DRAW);
     glGenVertexArrays(1, &m_vao_cylinder);
+    glBindVertexArray(m_vao_cylinder);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
+
 
     glActiveTexture(GL_TEXTURE0);
     glUseProgram(m_texture_shader);
@@ -99,9 +134,7 @@ void Realtime::initializeGL() {
     glBindBuffer(GL_ARRAY_BUFFER, m_fullscreen_vbo);
     glBufferData(GL_ARRAY_BUFFER, fullscreen_quad_data.size()*sizeof(GLfloat), fullscreen_quad_data.data(), GL_STATIC_DRAW);
     glGenVertexArrays(1, &m_fullscreen_vao);
-    glBindVertexArray(m_fullscreen_vao);
-
-    // Task 14: modify the code below to add a second attribute to the vertex attribute array
+    glBindVertexArray(m_fullscreen_vao);    
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(1);
@@ -111,50 +144,17 @@ void Realtime::initializeGL() {
     glBindVertexArray(0);
 
     makeFBO();
+    glInitialized = true;
 }
 
-void Realtime::paintGL() {
-    // Students: anything requiring OpenGL calls every frame should be done here
+void Realtime::paintGL() {   
     if(upload == true){        
         glUseProgram(m_shader);
 
         glBindFramebuffer(GL_FRAMEBUFFER,m_fbo);
         glViewport(0,0,size().width(), size().height());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // ---------- here's all the bindings -------- //
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_sphere); // sphere
-        glBufferData(GL_ARRAY_BUFFER,m_sphereData.size()*sizeof(GLfloat),m_sphereData.data(),GL_STATIC_DRAW);
-        glBindVertexArray(m_vao_sphere);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube); // cube
-        glBufferData(GL_ARRAY_BUFFER,m_cubeData.size()*sizeof(GLfloat),m_cubeData.data(),GL_STATIC_DRAW);
-        glBindVertexArray(m_vao_cube);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cylinder); // cylinder
-        glBufferData(GL_ARRAY_BUFFER,m_cylinderData.size()*sizeof(GLfloat),m_cylinderData.data(),GL_STATIC_DRAW);
-        glBindVertexArray(m_vao_cylinder);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cone); // cone
-        glBufferData(GL_ARRAY_BUFFER,m_coneData.size()*sizeof(GLfloat),m_coneData.data(),GL_STATIC_DRAW);
-        glBindVertexArray(m_vao_cone);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER,0);
         // ------------------------------------------- //
-
         glm::vec4 cam = glm::inverse(m_view) * glm::vec4(0,0,0,1);
         GLint locationcam = glGetUniformLocation(m_shader,"cam_pos");
         glUniform4fv(locationcam,1,&cam[0]);        
@@ -195,7 +195,6 @@ void Realtime::paintGL() {
             }
         }
 
-
         glBindFramebuffer(GL_FRAMEBUFFER,m_defaultFBO);
         glViewport(0,0,size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -215,7 +214,7 @@ void Realtime::paintTexture(GLuint texture){
     glUniform1i(locationKer,settings.kernelBasedFilter);
 
     glBindVertexArray(m_fullscreen_vao);
-    // Task 10: Bind "texture" to slot 0
+    // Bind "texture" to slot 0
     glActiveTexture(0);
     glBindTexture(GL_TEXTURE_2D,texture);
 
@@ -224,7 +223,6 @@ void Realtime::paintTexture(GLuint texture){
     glBindVertexArray(0);
     glUseProgram(0);
 }
-
 
 void Realtime::resizeGL(int w, int h) {
     // Tells OpenGL how big the screen is
@@ -269,6 +267,8 @@ void Realtime::sceneChanged() {
 
     upload = true;
     updateParam(settings.shapeParameter1,settings.shapeParameter2);
+    // std::cout<<"scene Changed called"<<std::endl;
+    updateVBOs(); // update VBOs of all the primitives
 
     glUseProgram(m_shader);
 
@@ -322,10 +322,25 @@ void Realtime::sceneChanged() {
 void Realtime::settingsChanged() {
     updateParam(settings.shapeParameter1, settings.shapeParameter2);
     updateParam2(width(),height(),settings.farPlane,settings.nearPlane);
-
+    if(glInitialized){updateVBOs();}// update VBOs of all the primitives
     update(); // asks for a PaintGL() call to occur
+    // std::cout<<"settings Changed called"<<std::endl;
 }
 
+void Realtime::updateVBOs(){
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_sphere);
+    glBufferData(GL_ARRAY_BUFFER,m_sphereData.size()*sizeof(GLfloat),m_sphereData.data(),GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube);
+    glBufferData(GL_ARRAY_BUFFER,m_cubeData.size()*sizeof(GLfloat),m_cubeData.data(),GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cone);
+    glBufferData(GL_ARRAY_BUFFER,m_coneData.size()*sizeof(GLfloat),m_coneData.data(),GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cylinder);
+    glBufferData(GL_ARRAY_BUFFER,m_cylinderData.size()*sizeof(GLfloat),m_cylinderData.data(),GL_STATIC_DRAW);
+    // Unbind the fullscreen quad's VBO and VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+}
 
 void Realtime::keyPressEvent(QKeyEvent *event) {
     m_keyMap[Qt::Key(event->key())] = true;
