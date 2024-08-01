@@ -9,8 +9,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <cstring>
 #include <string>
-
-// ================== Project 5: Lights, Camera
+#include <random>
 
 Realtime::Realtime(QWidget *parent)
     : QOpenGLWidget(parent)
@@ -40,6 +39,8 @@ void Realtime::finish() {
     glDeleteVertexArrays(1,&m_vao_cone);
     glDeleteBuffers(1,&m_vbo_cylinder);
     glDeleteVertexArrays(1,&m_vao_cylinder);
+    glDeleteBuffers(1,&m_vbo_skyscraper);
+    glDeleteVertexArrays(1,&m_vao_skyscraper);
     glDeleteProgram(m_shader);
     this->doneCurrent();
 }
@@ -67,7 +68,7 @@ void Realtime::initializeGL() {
     // Tells OpenGL how big the screen is
     glViewport(0, 0, size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
 
-    // Students: anything requiring OpenGL calls when the program starts should be done here
+    // Anything requiring OpenGL calls when the program starts should be done here
     m_shader = ShaderLoader::createShaderProgram(":/resources/shaders/default.vert", ":/resources/shaders/default.frag");
     m_texture_shader = ShaderLoader::createShaderProgram(":/resources/shaders/texture.vert",":/resources/shaders/texture.frag");
 
@@ -114,6 +115,17 @@ void Realtime::initializeGL() {
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
+    // ----------------------------- skyscrapper ------------------------------ //
+    glGenBuffers(1, &m_vbo_skyscraper);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skyscraper);
+    glBufferData(GL_ARRAY_BUFFER,m_skyscraperData.size()*sizeof(GLfloat),m_skyscraperData.data(),GL_STATIC_DRAW);
+    glGenVertexArrays(1, &m_vao_skyscraper);
+    glBindVertexArray(m_vao_skyscraper);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6 * sizeof(GLfloat),reinterpret_cast<void *>(0));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(GLfloat),reinterpret_cast<void*>(3*sizeof(GLfloat)));
+    // ------------------------------------------------------------------------ //
 
 
     glActiveTexture(GL_TEXTURE0);
@@ -144,11 +156,15 @@ void Realtime::initializeGL() {
     glBindVertexArray(0);
 
     makeFBO();
+
+    GenerateCity();
+
     glInitialized = true;
 }
 
 void Realtime::paintGL() {   
-    if(upload == true){        
+    if(upload == true){
+        std::cout<<"paintGL() called!"<<std::endl;
         glUseProgram(m_shader);
 
         glBindFramebuffer(GL_FRAMEBUFFER,m_fbo);
@@ -195,6 +211,97 @@ void Realtime::paintGL() {
             }
         }
 
+        // paint the ground plain:
+        glm::mat4 groundCTM = m_CTM_collection[0];
+        glm::vec4 Ambient = glm::vec4(1.0,1.0,1.0,0.0);
+        glm::vec4 Diffuse = glm::vec4(0.7,0.7,0.7,0.0);
+        GLint locationM = glGetUniformLocation(m_shader,"modelM");
+        glUniformMatrix4fv(locationM,1,GL_FALSE,&groundCTM[0][0]);
+        glm::mat4 MVP = m_proj * m_view * groundCTM;
+        GLint locationMVP = glGetUniformLocation(m_shader, "MVP");
+        glUniformMatrix4fv(locationMVP,1,GL_FALSE,&MVP[0][0]);
+        GLint locations = glGetUniformLocation(m_shader,"shine");
+        glUniform1f(locations,15);
+        GLint locationcD = glGetUniformLocation(m_shader,"cD");
+        glUniform4fv(locationcD,1,&Diffuse[0]);
+        glBindVertexArray(m_vao_cube);
+        glDrawArrays(GL_TRIANGLES, 0, m_cubeData.size() / 6);
+        glBindVertexArray(0);
+
+        // paint the street:
+        for(int i = 0; i < 10; i++){
+            glm::mat4 CTM = m_building_arr[i].CTM;
+            glm::vec4 Ambient = glm::vec4(0.5,0.5,0.5,0.0);
+            glm::vec4 Diffuse = glm::vec4(0.7,0.7,0.5,0.0);
+            // glm::vec4 Specular = glm::vec4(1.0,1.0,1.0,1.0);
+            GLint locationM = glGetUniformLocation(m_shader,"modelM");
+            glUniformMatrix4fv(locationM,1,GL_FALSE,&CTM[0][0]);
+            glm::mat4 MVP = m_proj * m_view * CTM;
+            GLint locationMVP = glGetUniformLocation(m_shader, "MVP");
+            glUniformMatrix4fv(locationMVP,1,GL_FALSE,&MVP[0][0]);
+            GLint locations = glGetUniformLocation(m_shader,"shine");
+            glUniform1f(locations,15);
+            GLint locationcA = glGetUniformLocation(m_shader,"cA");
+            glUniform4fv(locationcA,1,&Ambient[0]);
+            GLint locationcD = glGetUniformLocation(m_shader,"cD");
+            glUniform4fv(locationcD,1,&Diffuse[0]);
+            glBindVertexArray(m_vao_cube);
+            glDrawArrays(GL_TRIANGLES, 0, m_cubeData.size() / 6);
+            glBindVertexArray(0);
+        }
+
+        // generate light within each building
+
+        glm::vec3 color = glm::vec3(0.5, 0.5, 0.25);
+        glm::vec3 atten = glm::vec3(0.05, 0.8, 2.0);
+
+        GLint totalPointLights = glGetUniformLocation(m_shader,"num_point_lights");
+        glUniform1i(totalPointLights, m_point_lights.size() + m_building_arr.size() - 10);
+
+        int lightStart = m_point_lights.size();
+        int numOfBuildings = m_building_arr.size() - 10;
+        int buildingIndex = numOfStreet;
+        for (int i = lightStart; i < (numOfBuildings + lightStart); i++) {
+            glm::vec3 pos(m_building_arr[buildingIndex].position[0] + 0.3, m_building_arr[buildingIndex].position[1] - 1.f, m_building_arr[buildingIndex].position[2] - 0.3);
+            GLint colorLoc = glGetUniformLocation(m_shader, ("point_light_color[" + std::to_string(i)+ "]").c_str());
+            glUniform4f(colorLoc, color[0], color[1], color[2], 0.0f);
+            GLint posLoc = glGetUniformLocation(m_shader, ("point_light_pos[" + std::to_string(i)+ "]").c_str());
+            glUniform3f(posLoc, pos[0], pos[1], pos[2]);
+            GLint attLoc = glGetUniformLocation(m_shader,("point_light_func[" + std::to_string(i)+ "]").c_str());
+            glUniform3f(attLoc, atten[0], atten[1], atten[2]);
+            buildingIndex++;
+        }
+
+        // paint all the buildings
+        for(int i = 0; i < m_building_arr.size(); i++){
+            glm::mat4 CTM = m_building_arr[i].CTM;
+            glm::vec4 Ambient = glm::vec4(0.5,0.5,0.5,0.0);
+            glm::vec4 Diffuse = glm::vec4(0.7,0.7,0.5,0.0);
+            glm::vec4 Specular = glm::vec4(1.0,1.0,1.0,1.0);
+            GLint locationM = glGetUniformLocation(m_shader,"modelM");
+            glUniformMatrix4fv(locationM,1,GL_FALSE,&CTM[0][0]);
+            glm::mat4 MVP = m_proj * m_view * CTM;
+            GLint locationMVP = glGetUniformLocation(m_shader, "MVP");
+            glUniformMatrix4fv(locationMVP,1,GL_FALSE,&MVP[0][0]);
+            GLint locations = glGetUniformLocation(m_shader,"shine");
+            glUniform1f(locations,15);
+            GLint locationcA = glGetUniformLocation(m_shader,"cA");
+            glUniform4fv(locationcA,1,&Ambient[0]);
+            GLint locationcD = glGetUniformLocation(m_shader,"cD");
+            glUniform4fv(locationcD,1,&Diffuse[0]);
+            GLint locationcS = glGetUniformLocation(m_shader,"cS");
+            glUniform4fv(locationcS,1,&Specular[0]);
+
+            float type = m_building_arr[i].type;
+            if (type < 1){
+                glBindVertexArray(m_vao_skyscraper);
+                glDrawArrays(GL_TRIANGLES, 0, m_skyscraperData.size() / 6);
+                glBindVertexArray(0);
+            }
+
+        }
+
+        // -------------------------------------------------------------- //
         glBindFramebuffer(GL_FRAMEBUFFER,m_defaultFBO);
         glViewport(0,0,size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -228,7 +335,7 @@ void Realtime::resizeGL(int w, int h) {
     // Tells OpenGL how big the screen is
     glViewport(0, 0, size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
 
-    // Students: anything requiring OpenGL calls when the program starts should be done here
+    // anything requiring OpenGL calls when the program starts should be done here
     updateParam2(size().width(),size().height(),settings.farPlane,settings.nearPlane);
     makeFBO();
     update();
@@ -249,6 +356,7 @@ void Realtime::sceneChanged() {
     m_cubeData.clear();
     m_cylinderData.clear();
     m_coneData.clear();
+    m_skyscraperData.clear();
     for(SceneLightData light : m_data.lights){
         if(light.type == LightType::LIGHT_DIRECTIONAL){
             m_dir_lights.push_back(light);
@@ -284,15 +392,16 @@ void Realtime::sceneChanged() {
     glUniform1i(locationPL, m_point_lights.size());
     GLint locationSL =  glGetUniformLocation(m_shader,"num_spot_lights");
     glUniform1i(locationSL, m_spot_lights.size());
+    GLint locationMaxLightDistance = glGetUniformLocation(m_shader, "max_light_distance");
+    glUniform1f(locationMaxLightDistance, MAX_LIGHT_DISTANCE);
+
     for(int j = 0; j < m_dir_lights.size(); j++){
         GLint loc = glGetUniformLocation(m_shader, ("dir_light_dir[" + std::to_string(j)+ "]").c_str());
         glUniform4f(loc,m_dir_lights[j].dir[0],m_dir_lights[j].dir[1],m_dir_lights[j].dir[2],m_dir_lights[j].dir[3]);
         GLint loc2 = glGetUniformLocation(m_shader, ("dir_light_color[" + std::to_string(j)+ "]").c_str());
         glUniform4f(loc2,m_dir_lights[j].color[0],m_dir_lights[j].color[1],m_dir_lights[j].color[2],m_dir_lights[j].color[3]);
     }
-    for(int j = 0; j < m_point_lights.size(); j++){
-        GLint loc3 = glGetUniformLocation(m_shader, ("point_light_dir[" + std::to_string(j)+ "]").c_str());
-        glUniform4f(loc3,m_point_lights[j].dir[0],m_point_lights[j].dir[1],m_point_lights[j].dir[2],m_point_lights[j].dir[3]);
+    for(int j = 0; j < m_point_lights.size(); j++){        
         GLint loc4 = glGetUniformLocation(m_shader, ("point_light_color[" + std::to_string(j)+ "]").c_str());
         glUniform4f(loc4,m_point_lights[j].color[0],m_point_lights[j].color[1],m_point_lights[j].color[2],m_point_lights[j].color[3]);
         GLint locpos = glGetUniformLocation(m_shader, ("point_light_pos[" + std::to_string(j)+ "]").c_str());
@@ -367,13 +476,13 @@ void Realtime::mouseMoveEvent(QMouseEvent *event) {
     if (m_mouseDown) {
         int posX = event->position().x();
         int posY = event->position().y();
-        int deltaX = posX - m_prev_mouse_pos.x;
-        int deltaY = posY - m_prev_mouse_pos.y;
+        int deltaX = m_prev_mouse_pos.x - posX;
+        int deltaY = m_prev_mouse_pos.y - posY;
         m_prev_mouse_pos = glm::vec2(posX, posY);
 
         // Use deltaX and deltaY here to rotate
         // Sensitivity factor for rotation
-        float sensitivity = 0.005f;
+        float sensitivity = 0.003f;
         float angleX = deltaX * sensitivity;
         float angleY = deltaY * sensitivity;
         glm::mat4 rotX = createRotationMatrix(angleX, glm::vec3(0, 1, 0));
@@ -450,7 +559,6 @@ void Realtime::makeFBO(){
     //Unbind the FBO
     glBindFramebuffer(GL_FRAMEBUFFER,m_defaultFBO);
 }
-
 
 // DO NOT EDIT
 void Realtime::saveViewportImage(std::string filePath) {

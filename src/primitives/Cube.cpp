@@ -44,6 +44,7 @@ void Cube::makeFace(glm::vec3 topLeft,
     }
 
 }
+
 void Cube::setVertexData() {
 
     makeFace(glm::vec3( 0.5f,  0.5f, -0.5f),

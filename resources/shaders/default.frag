@@ -11,10 +11,10 @@ uniform float k_s;
 uniform vec4 dir_light_dir[8];
 uniform vec4 dir_light_color[8];
 
-uniform vec4 point_light_dir[8];
-uniform vec4 point_light_color[8];
-uniform vec3 point_light_pos[8];
-uniform vec3 point_light_func[8];
+// uniform vec4 point_light_dir[200];
+uniform vec4 point_light_color[200];
+uniform vec3 point_light_pos[200];
+uniform vec3 point_light_func[200];
 
 uniform vec4 spot_light_dir[8];
 uniform vec4 spot_light_color[8];
@@ -34,6 +34,8 @@ uniform vec4 cS;
 uniform float shine;
 uniform vec4 cam_pos;
 
+uniform float max_light_distance;
+
 void main() {
     vec4 normfinal = normalize(vec4(world_norm_out,0.0f));
     vec4 E = normalize(cam_pos - vec4(world_pos_out,1.0f));
@@ -47,8 +49,9 @@ void main() {
         if(shine > 0.0f){fragColor += color*k_s*cS*pow(clamp(dot(normalize(reflectLight),E),0.0f,1.0f),shine);}
     }
     for(int i = 0; i < num_point_lights; i++){
-        vec3 func = point_light_func[i];
         float distance = length(point_light_pos[i] - world_pos_out);
+        if (distance > max_light_distance) continue; // Skip lights that are too far
+        vec3 func = point_light_func[i];        
         float att = min(1.0f, 1.0f/(func[0] + distance*func[1]+ pow(distance, 2.0f)*func[2]));
         vec4 interToLight = vec4(normalize(point_light_pos[i] - world_pos_out), 0.0f);
         vec4 reflectLight = 2.0f * dot(normfinal, interToLight)*normfinal-interToLight;

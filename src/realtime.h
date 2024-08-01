@@ -12,7 +12,12 @@
 #include <QOpenGLWidget>
 #include <QTime>
 #include <QTimer>
+
+
 #include "utils/sceneparser.h"
+#include "city-components/Building.h"
+#include "constants.h"
+
 class Realtime : public QOpenGLWidget
 {
 public:
@@ -30,6 +35,9 @@ public:
     void makeFBO();
     void updateVBOs();
     void paintTexture(GLuint texture);
+    float getRandomFloat(float min, float max);
+    std::vector<float> generateRandomCubes();
+    void GenerateCity();
 public slots:
     void tick(QTimerEvent* event);                      // Called once per tick of m_timer
 
@@ -80,11 +88,14 @@ private:
     GLuint m_vao_cone; // Stores id of vao
     GLuint m_vbo_cylinder; // Stores id of vbo
     GLuint m_vao_cylinder; // Stores id of vao
+    GLuint m_vao_skyscraper;
+    GLuint m_vbo_skyscraper;
 
     std::vector<float> m_sphereData;
     std::vector<float> m_cubeData;
     std::vector<float> m_coneData;
-    std::vector<float> m_cylinderData;    
+    std::vector<float> m_cylinderData;
+    std::vector<float> m_skyscraperData;
 
     glm::vec4 m_cam_pos;
     glm::vec4 m_cam_look;
@@ -100,4 +111,8 @@ private:
     float m_shininess;
     bool upload = false;
     int m_defaultFBO;
+
+    int numOfStreet;
+    std::vector<glm::mat4> m_CTM_collection; // stores different CTMs for the cubes that represent the buildings
+    std::vector<Building> m_building_arr; // stores the buildings
 };

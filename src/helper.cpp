@@ -1,14 +1,18 @@
 #include "realtime.h"
-#include "primitives/cone.h"
+#include "primitives/Cone.h"
 #include "primitives/Cube.h"
 #include "primitives/Cylinder.h"
 #include "primitives/Sphere.h"
+#include "primitives/Skyscraper.h"
+#include <random>
 
 void Realtime::updateParam(int param1, int param2){
     Sphere sphere;
     Cylinder cylinder;
     Cone cone;
     Cube cube;
+    Skyscraper skyscraper;
+
     if(param2 < 3){
         sphere.updateParams(param1,3);
         if(param1 < 2){sphere.updateParams(2,3);}
@@ -22,16 +26,17 @@ void Realtime::updateParam(int param1, int param2){
         cone.updateParams(param1,param2);
     }
     cube.updateParams(param1);
+    skyscraper.updateParams(param1);
     m_sphereData = sphere.generateShape();
     m_cylinderData = cylinder.generateShape();
     m_coneData = cone.generateShape();
     m_cubeData = cube.generateShape();
+    m_skyscraperData = skyscraper.generateShape();
 }
 
 void Realtime::updateParam2(int screenW, int screenH, float farP, float nearP){
     float w_h_ratio = (screenW+0.0f)/screenH;
     float tanH = glm::tan(hAngle*0.5);
-    //std::cout<<tanH<<std::endl;
     float tanW = w_h_ratio*tanH;
     float c_ratio = - nearP/farP;
     glm::mat4 Mpp(1.0f,0.0f,0.0f,0.0f,
@@ -81,4 +86,13 @@ glm::mat4 Realtime::createRotationMatrix(float angle, glm::vec3 axis) {
         oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,         0.0f,
         0.0f,                             0.0f,                             0.0f,                            1.0f
         );
+}
+
+float Realtime::getRandomFloat(float min, float max) {
+    // Use the Mersenne Twister random number generator
+    std::random_device rd;  // Obtain a random number from hardware
+    std::mt19937 eng(rd()); // Seed the generator
+    std::uniform_real_distribution<> distr(min, max); // Define the range
+
+    return distr(eng);
 }

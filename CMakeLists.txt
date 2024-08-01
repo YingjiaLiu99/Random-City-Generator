@@ -52,6 +52,13 @@ add_executable(${PROJECT_NAME}
 
     src/helper.cpp
 
+    src/city-gen/city.cpp
+    src/city-components/Building.h
+    src/city-components/Building.cpp
+    src/constants.h
+    src/primitives/Skyscraper.h
+    src/primitives/Skyscraper.cpp
+
 )
 
 # GLM: this creates its library and allows you to `#include "glm/..."`
