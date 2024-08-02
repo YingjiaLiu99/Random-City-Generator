@@ -15,6 +15,7 @@ class MainWindow : public QWidget
 
 public:
     void initialize();
+    void preloadScene();
     void finish();
 
 private:

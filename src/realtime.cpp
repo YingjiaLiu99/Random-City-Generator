@@ -164,7 +164,7 @@ void Realtime::initializeGL() {
 
 void Realtime::paintGL() {   
     if(upload == true){
-        std::cout<<"paintGL() called!"<<std::endl;
+        // std::cout<<"paintGL() called!"<<std::endl;
         glUseProgram(m_shader);
 
         glBindFramebuffer(GL_FRAMEBUFFER,m_fbo);

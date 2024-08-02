@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     w.initialize();
     w.resize(800, 600);
     w.show();
-
+    w.preloadScene();
     int return_val = a.exec();
     w.finish();
     return return_val;

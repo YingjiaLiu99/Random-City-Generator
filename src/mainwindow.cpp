@@ -191,7 +191,23 @@ void MainWindow::initialize() {
 
     // Set default values for near and far planes
     onValChangeNearBox(0.1f);
-    onValChangeFarBox(10.f);
+    onValChangeFarBox(10.f);    
+}
+
+void MainWindow::preloadScene() {
+    // Preload the scene file if it exists
+    QString defaultSceneFilePath = QDir::currentPath()
+                                       .append(QDir::separator())
+                                       .append("city.json");
+    std::cout<<defaultSceneFilePath.toStdString()<<std::endl;
+    QFile file(defaultSceneFilePath);
+    if (file.exists()) {
+        settings.sceneFilePath = defaultSceneFilePath.toStdString();
+        std::cout << "Loaded default scenefile: \"" << defaultSceneFilePath.toStdString() << "\"." << std::endl;
+        realtime->sceneChanged();
+    } else {
+        std::cout << "Default scenefile not found." << std::endl;
+    }
 }
 
 void MainWindow::finish() {
