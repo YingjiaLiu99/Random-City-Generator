@@ -24,7 +24,7 @@ find_package(Qt6 REQUIRED COMPONENTS Xml)
 include_directories(src)
 
 # Specifies .cpp and .h files to be passed to the compiler
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME} WIN32
     src/main.cpp
 
     src/realtime.cpp
