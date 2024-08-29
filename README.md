@@ -2,7 +2,4 @@
 
 ## Current Version Demo
 
-<video width="600" controls>
-  <source src="public/demo/demo1.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[![Demo video](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://github.com/user-attachments/assets/e2ee1f3d-1c9b-4edd-b0b4-1de28d9859a4)
