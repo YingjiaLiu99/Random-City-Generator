@@ -33,9 +33,9 @@ void MainWindow::initialize() {
     QLabel *filters_label = new QLabel(); // Filters label
     filters_label->setText("Filters");
     filters_label->setFont(font);
-    QLabel *ec_label = new QLabel(); // Extra Credit label
-    ec_label->setText("Extra Credit");
-    ec_label->setFont(font);
+//    QLabel *ec_label = new QLabel(); // Extra Credit label
+//    ec_label->setText("Extra Credit");
+//    ec_label->setFont(font);
     QLabel *param1_label = new QLabel(); // Parameter 1 label
     param1_label->setText("Parameter 1:");
     QLabel *param2_label = new QLabel(); // Parameter 2 label
@@ -145,21 +145,21 @@ void MainWindow::initialize() {
     farLayout->setLayout(lfar);
 
     // Extra Credit:
-    ec1 = new QCheckBox();
-    ec1->setText(QStringLiteral("Extra Credit 1"));
-    ec1->setChecked(false);
+//    ec1 = new QCheckBox();
+//    ec1->setText(QStringLiteral("Extra Credit 1"));
+//    ec1->setChecked(false);
 
-    ec2 = new QCheckBox();
-    ec2->setText(QStringLiteral("Extra Credit 2"));
-    ec2->setChecked(false);
+//    ec2 = new QCheckBox();
+//    ec2->setText(QStringLiteral("Extra Credit 2"));
+//    ec2->setChecked(false);
 
-    ec3 = new QCheckBox();
-    ec3->setText(QStringLiteral("Extra Credit 3"));
-    ec3->setChecked(false);
+//    ec3 = new QCheckBox();
+//    ec3->setText(QStringLiteral("Extra Credit 3"));
+//    ec3->setChecked(false);
 
-    ec4 = new QCheckBox();
-    ec4->setText(QStringLiteral("Extra Credit 4"));
-    ec4->setChecked(false);
+//    ec4 = new QCheckBox();
+//    ec4->setText(QStringLiteral("Extra Credit 4"));
+//    ec4->setChecked(false);
 
     vLayout->addWidget(uploadFile);
     vLayout->addWidget(saveImage);
@@ -177,11 +177,11 @@ void MainWindow::initialize() {
     vLayout->addWidget(filter1);
     vLayout->addWidget(filter2);
     // Extra Credit:
-    vLayout->addWidget(ec_label);
-    vLayout->addWidget(ec1);
-    vLayout->addWidget(ec2);
-    vLayout->addWidget(ec3);
-    vLayout->addWidget(ec4);
+//    vLayout->addWidget(ec_label);
+//    vLayout->addWidget(ec1);
+//    vLayout->addWidget(ec2);
+//    vLayout->addWidget(ec3);
+//    vLayout->addWidget(ec4);
 
     connectUIElements();
 
@@ -224,7 +224,7 @@ void MainWindow::connectUIElements() {
     connectParam2();
     connectNear();
     connectFar();
-    connectExtraCredit();
+    // connectExtraCredit();
 }
 
 void MainWindow::connectPerPixelFilter() {
@@ -267,12 +267,12 @@ void MainWindow::connectFar() {
             this, &MainWindow::onValChangeFarBox);
 }
 
-void MainWindow::connectExtraCredit() {
-    connect(ec1, &QCheckBox::clicked, this, &MainWindow::onExtraCredit1);
-    connect(ec2, &QCheckBox::clicked, this, &MainWindow::onExtraCredit2);
-    connect(ec3, &QCheckBox::clicked, this, &MainWindow::onExtraCredit3);
-    connect(ec4, &QCheckBox::clicked, this, &MainWindow::onExtraCredit4);
-}
+//void MainWindow::connectExtraCredit() {
+//    connect(ec1, &QCheckBox::clicked, this, &MainWindow::onExtraCredit1);
+//    connect(ec2, &QCheckBox::clicked, this, &MainWindow::onExtraCredit2);
+//    connect(ec3, &QCheckBox::clicked, this, &MainWindow::onExtraCredit3);
+//    connect(ec4, &QCheckBox::clicked, this, &MainWindow::onExtraCredit4);
+//}
 
 void MainWindow::onPerPixelFilter() {
     settings.perPixelFilter = !settings.perPixelFilter;
@@ -369,7 +369,6 @@ void MainWindow::onValChangeFarBox(double newValue) {
     realtime->settingsChanged();
 }
 
-// Extra Credit:
 
 void MainWindow::onExtraCredit1() {
     settings.extraCredit1 = !settings.extraCredit1;
